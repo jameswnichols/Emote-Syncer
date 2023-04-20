@@ -57,8 +57,8 @@ def Socket(hostIP, hostPort):
                     s.send(generatePingPacket(totalPing))
 
         except KeyboardInterrupt:
+            s.close()
             sys.exit()
-            pass
 
         except json.JSONDecodeError:
             print(f"Disconnected from {HOST}.")
