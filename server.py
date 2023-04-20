@@ -117,6 +117,19 @@ if __name__ == "__main__":
         if lastPinged == -1 or getTimestamp() - lastPinged > MS_BETWEEN_PINGS:
             lastPinged = getTimestamp()
 
-            for clientID, data in activeClients.items():
+            currentIndex = 0
+
+            while currentIndex < len(activeClients):
+                clientID, data = list(activeClients.keys())[currentIndex], list(activeClients.values())[currentIndex]
+
+                if not data[0].is_alive():
+                    print(f"Prune {clientID} from dict.")
+                    del activeClients[clientID]
+                    currentIndex += 1
+                    continue
+
                 data[1].send("ping")
+                
+                currentIndex += 1
+                    
 
