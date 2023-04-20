@@ -67,7 +67,6 @@ def worker(connectedClient : socket.socket, pingController : PingController, cli
                     connectedClient.send(generatePingPacket())
         except:
 
-
             #If client connection is dead
             connectedClient.close()
             print(f"{clientID} disconnected.")
@@ -104,6 +103,7 @@ if __name__ == "__main__":
     while True:
         
         try:
+            #Runs when knew client attempts to join.
             conn, addr = ser.accept()
             clientID = pingController.addUser()
 
@@ -116,8 +116,10 @@ if __name__ == "__main__":
             activeClients[clientID][0].start()
 
         except Exception as e:
+            #When no new clients are trying to join.
             pass
         
+        #Sends out a ping to the clients every second.
         if lastPinged == -1 or getTimestamp() - lastPinged > MS_BETWEEN_PINGS:
             lastPinged = getTimestamp()
 
