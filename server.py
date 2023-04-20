@@ -10,7 +10,7 @@ MS_BETWEEN_PINGS = 1000
 NS_TO_MS = 1_000_000
 
 def getTimestamp():
-    return time.time_ns/NS_TO_MS
+    return time.time_ns()/NS_TO_MS
 
 class PingAverage:
     def __init__(self):
@@ -45,15 +45,24 @@ class PingController:
     def removeUser(self, userID):
         del self.pingValues[userID]
 
-def worker(socket):
+def worker(connectedClient : socket.socket):
     while True:
-        client, address = socket.accept()
-        client.send("OK")
-        client.close()
+
+        #Check if connection is dead
+        if connectedClient.fileno() == -1:
+            connectedClient.close()
+            break
+
+
+    # while True:
+    #     connectedClient.send("OK")
+    #     connectedClient.close()
 
 if __name__ == "__main__":
     
-    controller = PingController()
+    pingController = PingController()
+
+    activeClients = {}
 
     lastPinged = -1
 
@@ -63,23 +72,14 @@ if __name__ == "__main__":
     ser.listen(5)
     ser.setblocking(0)
 
-    readList = [ser]
-
     while True:
-        readable, writable, errored = select.select(readList, [], [])
-        for s in readable:
-            if s is ser:
-                
-                client_socket, address = ser.accept()
-                readList.append(client_socket)
-                print("Connection from", address)
-            else:
-                data = s.recv(1024)
-                if data:
-                    s.send(data)
-                else:
-                    s.close()
-                    readList.remove(s)
+        
+        try:
+            conn, addr = ser.accept()
+
+
+        except:
+            pass
         
         if lastPinged == -1 or getTimestamp() - lastPinged > MS_BETWEEN_PINGS:
             lastPinged = getTimestamp()
