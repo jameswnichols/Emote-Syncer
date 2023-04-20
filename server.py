@@ -5,7 +5,7 @@ import select
 import multiprocessing as mp
 import json
 
-HOST = "localhost"
+HOST = socket.gethostbyname(socket.gethostname())
 PORT = 65432
 MS_BETWEEN_PINGS = 1000
 
@@ -93,6 +93,8 @@ if __name__ == "__main__":
     ser.bind((HOST, PORT))
     ser.listen(5)
     ser.setblocking(0)
+
+    print(f"Started hosting {HOST} on port {PORT}")
 
     while True:
         
