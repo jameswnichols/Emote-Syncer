@@ -50,7 +50,11 @@ def Socket(hostIP, hostPort):
 
                     serverPing = float(output[timeVar+5:msVar])
 
-                    s.send(generatePingPacket((getTimestamp()-messageData["timestamp"])+serverPing))
+                    totalPing = (getTimestamp()-messageData["timestamp"])+serverPing
+
+                    print(f"Total ping ~{totalPing}ms")
+
+                    s.send(generatePingPacket(totalPing))
 
         except KeyboardInterrupt:
             sys.exit()
