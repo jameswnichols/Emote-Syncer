@@ -51,18 +51,41 @@ class PingController:
         del self.pingValues[userID]
 
 def worker(connectedClient : socket.socket, pingController : PingController, clientID, rec):
+    print(f"{clientID} connected.")
     while True:
 
         #Check if connection is dead
         if connectedClient.fileno() == -1:
             connectedClient.close()
+            print(f"{clientID} disconnected.")
             break
+        
+        #Receive messages from main core
+        try:
+            match rec.recv():
+                case "ping":
+                    connectedClient.send(generatePingPacket())
+        except:
 
-        match rec.recv():
-            case "ping":
-                connectedClient.send(generatePingPacket())
 
-        connectedClient.recv(1024)
+            #If client connection is dead
+            connectedClient.close()
+            print(f"{clientID} disconnected.")
+            break
+        
+        #Receive messages from client
+        try:
+            message = json.loads(connectedClient.recv(1024).decode("utf-8"))
+
+            messageType, messageData = message["type"], message["data"]
+
+            match messageType:
+                case "ping":
+                    pingController.addPingValue(clientID, messageData["ping"])
+
+        except:
+            pass
+
 
 if __name__ == "__main__":
     
