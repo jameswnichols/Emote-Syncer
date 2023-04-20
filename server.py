@@ -53,13 +53,6 @@ class PingController:
 def worker(connectedClient : socket.socket, pingController : PingController, clientID, rec):
     print(f"{clientID} connected.")
     while True:
-
-        #Check if connection is dead
-        if connectedClient.fileno() == -1:
-            connectedClient.close()
-            print(f"{clientID} disconnected.")
-            break
-        
         #Receive messages from main core
         try:
             match rec.recv():
@@ -69,6 +62,7 @@ def worker(connectedClient : socket.socket, pingController : PingController, cli
 
             #If client connection is dead
             connectedClient.close()
+            pingController.removeUser(clientID)
             print(f"{clientID} disconnected.")
             break
         
