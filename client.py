@@ -2,6 +2,13 @@ import socket
 import json 
 import time
 import sys
+import os
+
+PLATFORM = sys.platform
+
+DATACENTRE_URL = "ping-eu.ds.on.epicgames.com"
+
+PING_LETTER = "c" if PLATFORM == "darwin" or "linux" in PLATFORM else "n"
 
 HOST = "localhost"
 PORT = 65432
@@ -36,6 +43,11 @@ def Socket(hostIP, hostPort):
 
             match messageType:
                 case "ping":
+
+                    result = os.system(f"ping {DATACENTRE_URL} -{PING_LETTER} 1")
+
+                    print(result)
+
                     s.send(generatePingPacket(getTimestamp()-messageData["timestamp"]))
 
         except KeyboardInterrupt:
