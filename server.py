@@ -2,6 +2,8 @@ import socket
 import uuid
 import time
 import select
+import multiprocessing as mp
+import json
 
 HOST = "localhost"
 PORT = 65432
@@ -11,6 +13,9 @@ NS_TO_MS = 1_000_000
 
 def getTimestamp():
     return time.time_ns()/NS_TO_MS
+
+def generatePingPacket():
+    return json.dumps({"type":"ping","data":{"timestamp":getTimestamp()}}).encode("utf-8")
 
 class PingAverage:
     def __init__(self):
@@ -45,7 +50,7 @@ class PingController:
     def removeUser(self, userID):
         del self.pingValues[userID]
 
-def worker(connectedClient : socket.socket):
+def worker(connectedClient : socket.socket, pingController : PingController, clientID, rec):
     while True:
 
         #Check if connection is dead
@@ -53,10 +58,11 @@ def worker(connectedClient : socket.socket):
             connectedClient.close()
             break
 
+        match rec.recv():
+            case "ping":
+                connectedClient.send(generatePingPacket())
 
-    # while True:
-    #     connectedClient.send("OK")
-    #     connectedClient.close()
+        connectedClient.recv(1024)
 
 if __name__ == "__main__":
     
@@ -76,12 +82,22 @@ if __name__ == "__main__":
         
         try:
             conn, addr = ser.accept()
+            clientID = pingController.addUser()
 
+            rec, send = mp.Pipe()
 
-        except:
+            activeClients[clientID] = (mp.Process(target=worker, args=(conn, pingController, clientID, rec)),send)
+
+            activeClients[clientID][0].daemon = True
+
+            activeClients[clientID][0].start()
+
+        except Exception as e:
             pass
         
         if lastPinged == -1 or getTimestamp() - lastPinged > MS_BETWEEN_PINGS:
             lastPinged = getTimestamp()
-            print("PING")
+
+            for clientID, data in activeClients.items():
+                data[1].send("ping")
 
