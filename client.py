@@ -1,6 +1,7 @@
 import socket
 import json 
 import time
+import sys
 
 HOST = "localhost"
 PORT = 65432
@@ -9,6 +10,9 @@ NS_TO_MS = 1_000_000
 
 def getTimestamp():
     return time.time_ns()/NS_TO_MS
+
+def generatePingPacket(ping):
+    return json.dumps({"type":"ping","data":{"ping":ping}}).encode("utf-8")
 
 def Socket(hostIP, hostPort):
 
@@ -32,12 +36,20 @@ def Socket(hostIP, hostPort):
 
             match messageType:
                 case "ping":
-                    print(getTimestamp()-messageData["timestamp"])
-            
+                    s.send(generatePingPacket(getTimestamp()-messageData["timestamp"]))
 
-
-        except OSError as e:
+        except KeyboardInterrupt:
+            sys.exit()
             pass
+
+        except json.JSONDecodeError:
+            print(f"Disconnected from {HOST}.")
+            s.close()
+            break
+
+        except:
+            pass
+        
 
 if __name__ == "__main__":
     Socket(HOST,PORT)
