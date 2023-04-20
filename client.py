@@ -32,11 +32,6 @@ def Socket(hostIP, hostPort):
 
     print(f"Connected to {hostIP}.")
     while True:
-
-        if s.fileno() == -1:
-            print("Closed connection.")
-            return
-        
         try:
             message = json.loads(s.recv(1024).decode("utf-8"))
 
