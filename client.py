@@ -3,6 +3,7 @@ import json
 import time
 import sys
 import os
+import subprocess
 
 PLATFORM = sys.platform
 
@@ -44,11 +45,17 @@ def Socket(hostIP, hostPort):
             match messageType:
                 case "ping":
 
-                    result = os.system(f"ping {DATACENTRE_URL} -{PING_LETTER} 1")
+                    ret = subprocess.run(f"ping {DATACENTRE_URL} -{PING_LETTER} 1", capture_output=True, shell=True)
 
-                    print(result)
+                    output = ret.stdout.decode()
 
-                    s.send(generatePingPacket(getTimestamp()-messageData["timestamp"]))
+                    timeVar = output.find("time=")
+
+                    msVar = output.find("ms")
+
+                    serverPing = float(output[timeVar+5:msVar])
+
+                    s.send(generatePingPacket((getTimestamp()-messageData["timestamp"])+serverPing))
 
         except KeyboardInterrupt:
             sys.exit()
@@ -59,7 +66,7 @@ def Socket(hostIP, hostPort):
             s.close()
             break
 
-        except:
+        except Exception as e:
             pass
         
 
