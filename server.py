@@ -4,6 +4,7 @@ import time
 import select
 import multiprocessing as mp
 import json
+import pynput
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 65432
@@ -52,15 +53,23 @@ class PingController:
 
 def worker(connectedClient : socket.socket, pingController : PingController, clientID, rec):
     print(f"{clientID} connected.")
+
+    pingCounter = 1
+
     while True:
         #Receive messages from main core
         try:
             match rec.recv():
                 case "ping":
+                    #Check if client doesnt respond to pings
+                    if pingCounter % 2 != 0 and pingCounter != 1:
+                        raise Exception
+                    
+                    pingCounter += 1
                     connectedClient.send(generatePingPacket())
         except:
-
-            #If client connection is dead
+            
+            #If client connection is dead 
             connectedClient.close()
             pingController.removeUser(clientID)
             print(f"{clientID} disconnected.")
@@ -74,6 +83,7 @@ def worker(connectedClient : socket.socket, pingController : PingController, cli
 
             match messageType:
                 case "ping":
+                    pingCounter += 1
                     pingController.addPingValue(clientID, messageData["ping"])
 
         except:
@@ -125,7 +135,7 @@ if __name__ == "__main__":
                 clientID, data = list(activeClients.keys())[currentIndex], list(activeClients.values())[currentIndex]
 
                 if not data[0].is_alive():
-                    print(f"Prune {clientID} from dict.")
+                    print(f"Prune {clientID}.")
                     del activeClients[clientID]
                     currentIndex += 1
                     continue
